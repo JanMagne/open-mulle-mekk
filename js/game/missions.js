@@ -1,6 +1,6 @@
 // Historien: steder på kartet, hvem som bor der, og hva som skjer når Mulle kommer.
 import { state, save, addPart } from './state.js';
-import { stats } from './car.js';
+import { stats, LIMITS } from './car.js';
 import { PARTS } from '../data/parts.js';
 import { audio } from '../engine/audio.js';
 
@@ -46,7 +46,7 @@ function award(id) {
 }
 
 const partNames = (keys) => {
-  const names = keys.map((k) => PARTS[k].name.toLowerCase());
+  const names = keys.map((k) => PARTS[k].indef);
   return names.length > 1 ? names.slice(0, -1).join(', ') + ' og ' + names[names.length - 1] : names[0];
 };
 
@@ -109,7 +109,7 @@ export function arrive(id) {
       } else if (m.kake === 'none') {
         if (state.carried) {
           npc('Kaken er ferdig, men du har jo noe annet på lasset.');
-        } else if (st.comfort >= 6) {
+        } else if (st.comfort >= KAKE_COMFORT) {
           state.carried = 'kake';
           m.kake = 'carrying';
           npc('Bilen din ser myk og god ut! Her er kaken til hagefesten i den gule villaen.');
@@ -241,6 +241,40 @@ export function figgeCall() {
     { who: 'figge', text: `Jeg har nettopp tippet noen deler i skraphaugen din: ${partNames(keys)}.` },
     { who: 'mulle', text: 'Så bra! Takk, Figge. Vi tar en titt i skraphaugen.' },
   ];
+}
+
+// Kravene bilen kan mangle for oppdrag som ikke er gjort ennå.
+// Brukes både til Mulles hint i garasjen og til merkene på tavla.
+const KAKE_COMFORT = 6;
+function goalList() {
+  const m = state.missions;
+  const g = [];
+  if (m.melk === 'none') {
+    g.push({ stat: 'cargo', min: 1, text: 'Med lasteplan kan vi hjelpe bonde Ola med å kjøre melk!' });
+    g.push({ stat: 'strength', min: LIMITS.humpete.min, text: 'Nå er bilen sterk nok for den humpete veien til Olas gård.' });
+  }
+  if (!m.fyr) g.push({ stat: 'lights', min: 1, text: 'Med lykter kommer vi gjennom den mørke tunnelen til fyret!' });
+  if (m.kake !== 'done') g.push({ stat: 'comfort', min: KAKE_COMFORT, text: 'Nå er bilen myk nok til å frakte kaka fra bakeriet!' });
+  if (!m.sigurd) g.push({ stat: 'grip', min: LIMITS.gjorme.min, text: 'Med så godt grep kommer vi oss gjennom gjørma til Sigurd!' });
+  if (!m.topp) g.push({ stat: 'climb', min: LIMITS.bratt.min, text: 'Nå har bilen nok kraft til den bratte bakken opp til fjelltoppen!' });
+  return g;
+}
+
+const num = (v) => (typeof v === 'boolean' ? (v ? 1 : 0) : v);
+
+// Hint når en endring i garasjen gjør at bilen klarer et nytt krav.
+export function garageHints(before, after) {
+  if (!after.drivable) return [];
+  return goalList()
+    .filter((g) => num(after[g.stat]) >= g.min && (num(before[g.stat]) < g.min || !before.drivable))
+    .map((g) => g.text);
+}
+
+// Kravmerker til tavla i garasjen: stat -> minsteverdi.
+export function boardGoals() {
+  const out = {};
+  for (const g of goalList()) out[g.stat] = g.min;
+  return out;
 }
 
 // Mulle gir et hint om hva man kan gjøre nå.

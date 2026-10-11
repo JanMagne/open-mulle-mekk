@@ -1,6 +1,6 @@
 // Garasjen: dra deler fra gulvet og fest dem på chassiset.
 import { game } from '../game.js';
-import { layer, shape, rect, stroke, circ, ell, ellPts, txt, rand, darken, hatch, grain, tube, INK } from '../engine/draw.js';
+import { layer, shape, rect, stroke, circ, ell, ellPts, txt, rand, darken, hatch, grain, tube, star, INK } from '../engine/draw.js';
 import { bigArrow, inside, statIcon } from '../game/ui.js';
 import { drawPerson, drawDog, drawPhone, LOOKS } from '../game/characters.js';
 import { drawCar, carHit, drawPart, hitPart, partShadow } from '../game/carRender.js';
@@ -9,7 +9,7 @@ import { PARTS } from '../data/parts.js';
 import { state, partsAt, movePart, save } from '../game/state.js';
 import { talk } from '../engine/talk.js';
 import { audio } from '../engine/audio.js';
-import { hint, figgeCall } from '../game/missions.js';
+import { hint, figgeCall, garageHints, boardGoals } from '../game/missions.js';
 
 let bg = null;
 const CAR_X = 400;
@@ -84,11 +84,13 @@ export const garageScene = {
   carInfo: null,
   ringT: 0,
   cursor: null,
+  party: 0,
 
   enter(params = {}) {
     if (!bg) bg = makeBg();
     this.t = 0;
     this.drag = null;
+    this.party = 0;
     this.st = stats();
     this.ringT = 0;
     if (state.figgePending) {
@@ -104,6 +106,7 @@ export const garageScene = {
 
   update(dt) {
     this.t += dt;
+    this.party = Math.max(0, this.party - dt);
     if (state.figgePending) {
       this.ringT += dt;
       if (this.ringT > 2.6) {
@@ -142,11 +145,14 @@ export const garageScene = {
       drawPart(g, p.key, p.x, p.y);
     }
     const dragDef = this.drag ? this.drag.def : null;
+    const hop = this.party ? -Math.abs(Math.sin(this.party * 9)) * 14 * Math.min(1, this.party) : 0;
     this.carInfo = drawCar(g, CAR_X, GROUND, 1, {
       showSlots: dragDef ? dragDef.slot : null,
       hotSlot: this.hotSlot,
+      bounce: hop,
       t,
     });
+    if (this.party) this.drawParty(g);
     for (const p of front) {
       partShadow(g, p.key, p.x, p.y);
       drawPart(g, p.key, p.x, p.y);
@@ -161,6 +167,34 @@ export const garageScene = {
       g.restore();
       drawPart(g, d.part.key, d.x, d.y, 1.05);
     }
+  },
+
+  celebrate() {
+    this.party = 2.6;
+    audio.fanfare();
+    audio.vroom();
+    if (this.st.horn) setTimeout(() => audio.honk(this.st.horn), 900);
+  },
+
+  // Stjerner som spruter ut fra bilen når den blir kjørbar.
+  drawParty(g) {
+    const k = 1 - this.party / 2.6; // 0 → 1
+    const R = rand(77);
+    const cols = ['#f4c430', '#e2463a', '#4f9fd8', '#7fc06a', '#e88ab0'];
+    g.save();
+    g.globalAlpha = Math.min(1, this.party);
+    for (let i = 0; i < 16; i++) {
+      const a = -Math.PI * (0.1 + R() * 0.8);
+      const sp = 140 + R() * 160;
+      const x = CAR_X + Math.cos(a) * sp * k + (R() - 0.5) * 120;
+      const y = GROUND - 80 + Math.sin(a) * sp * k + 260 * k * k;
+      g.save();
+      g.translate(x, y);
+      g.rotate(k * 6 + i);
+      shape(g, star(0, 0, 11, 5), { fill: cols[i % cols.length], lw: 1.6, j: 0.2, seed: i });
+      g.restore();
+    }
+    g.restore();
   },
 
   // Synlig ringing: glød, lydbølger og «RING!» rundt telefonen.
@@ -200,15 +234,16 @@ export const garageScene = {
     rect(g, x - 6, y - 6, w + 12, 8, { fill: '#8a5a2b', lw: 2 });
     txt(g, 'Bilen vår', x + w / 2, y + 16, { size: 20, color: '#f6f1e0' });
     const st = this.st;
+    const goals = boardGoals();
     const rows = [
       ['fart', 'Fart', st.motorKey ? st.topSpeed / 160 : 0],
-      ['kraft', 'Kraft', Math.min(1, st.climb / 0.6)],
-      ['styrke', 'Styrke', Math.min(1, st.strength / 9)],
-      ['komfort', 'Komfort', Math.min(1, st.comfort / 9)],
-      ['grep', 'Grep', Math.min(1, st.grip / 8)],
+      ['kraft', 'Kraft', Math.min(1, st.climb / 0.6), goals.climb && goals.climb / 0.6],
+      ['styrke', 'Styrke', Math.min(1, st.strength / 9), goals.strength && goals.strength / 9],
+      ['komfort', 'Komfort', Math.min(1, st.comfort / 9), goals.comfort && goals.comfort / 9],
+      ['grep', 'Grep', Math.min(1, st.grip / 8), goals.grip && goals.grip / 8],
       ['tank', 'Tank', Math.min(1, st.capacity / 120)],
     ];
-    rows.forEach(([icon, label, v], i) => {
+    rows.forEach(([icon, label, v, goal], i) => {
       const ry = y + 42 + i * 24;
       g.save();
       g.fillStyle = 'rgba(255,255,255,0.85)';
@@ -222,6 +257,12 @@ export const garageScene = {
       g.fillRect(x + 86, ry - 5, 62, 10);
       g.fillStyle = ['#e2463a', '#7fc06a', '#b9c3c9', '#e88ab0', '#f2c94c', '#f08a4b'][i];
       g.fillRect(x + 86, ry - 5, 62 * Math.max(0, Math.min(1, v)), 10);
+      // gult merke: så langt må stolpen nå for et oppdrag som gjenstår
+      if (goal) {
+        const gx = x + 86 + 62 * goal;
+        g.fillStyle = v >= goal ? '#bff0a0' : '#ffe27a';
+        g.fillRect(gx - 1.5, ry - 8, 3, 16);
+      }
     });
     const yy = y + 42 + 6 * 24;
     const flags = [['Lys', st.lights], ['Horn', !!st.horn], ['Last', st.cargo]];
@@ -338,23 +379,35 @@ export const garageScene = {
       movePart(d.part, 'pile1');
       audio.whoosh();
       talk.clear();
-      talk.say('mulle', `Jeg legger ${d.def.name.toLowerCase()} tilbake i skraphaugen.`);
+      talk.say('mulle', `Jeg legger ${d.def.def} tilbake i skraphaugen.`);
       return;
     }
     if (slot) {
-      const wasDrivable = this.st.drivable;
+      const before = this.st;
       attach(d.part, slot);
       audio.clank();
       this.refresh();
-      talk.clear();
-      if (!wasDrivable && this.st.drivable && markDrivable()) {
+      const hints = garageHints(before, this.st)
+        .slice(0, 2)
+        .map((text) => ({ who: 'mulle', text, important: true }));
+      if (!before.drivable && this.st.drivable) {
+        // Stort øyeblikk: bilen kan kjøre! Feir, og ikke la neste kommentar viske det bort.
+        this.celebrate();
+        talk.clear();
+        const first = markDrivable();
         talk.lines([
-          { who: 'mulle', text: 'Hurra! Nå har bilen alt den trenger for å kjøre!' },
-          { who: 'mulle', text: 'Kom, vi går ut på gården og prøvekjører den.' },
+          { who: 'mulle', text: first ? 'Hurra! Nå har bilen alt den trenger for å kjøre!' : 'Hurra! Nå kan bilen kjøre igjen!', important: true },
+          ...(first ? [{ who: 'mulle', text: 'Kom, vi går ut på gården og prøvekjører den.', important: true }] : []),
+          ...hints,
         ]);
-      } else if (!wasDrivable && this.st.drivable) {
-        talk.say('mulle', 'Nå kan bilen kjøre igjen!');
+      } else if (talk.cur && talk.cur.important) {
+        // en viktig beskjed vises allerede: legg nye hint i kø i stedet for å avbryte
+        talk.lines(hints);
+      } else if (hints.length) {
+        talk.clear();
+        talk.lines(hints);
       } else {
+        talk.clear();
         const R = rand(Math.floor(this.t * 1000));
         talk.say('mulle', R() < 0.6 && d.def.comment ? d.def.comment : PRAISE[Math.floor(R() * PRAISE.length)]);
       }

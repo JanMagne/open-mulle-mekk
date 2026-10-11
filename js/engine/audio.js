@@ -105,6 +105,12 @@ export const audio = {
   fanfare() {
     [523, 659, 784, 1046].forEach((f, i) => this.tone(f, i === 3 ? 0.6 : 0.18, { type: 'triangle', vol: 0.18, delay: i * 0.15 }));
   },
+  // motoren starter og ruser
+  vroom() {
+    this.tone(55, 0.9, { type: 'sawtooth', vol: 0.1, slide: 90 });
+    this.tone(28, 0.9, { type: 'square', vol: 0.06, slide: 45 });
+    this.noise(0.5, { freq: 300, type: 'lowpass', vol: 0.2, delay: 0.05 });
+  },
   bump() {
     this.noise(0.08, { freq: 180, type: 'lowpass', vol: 0.4 });
   },

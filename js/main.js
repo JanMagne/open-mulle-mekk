@@ -27,6 +27,7 @@ function resize() {
   canvas.width = Math.round(W * s * dpr);
   canvas.height = Math.round(H * s * dpr);
   scale = (W * s * dpr) / W;
+  Q.maxRes = Math.max(1, Math.min(2, scale));
 }
 window.addEventListener('resize', resize);
 resize();

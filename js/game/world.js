@@ -220,8 +220,10 @@ function obstacleSign(g, x, y, label, color) {
 }
 
 export function renderWorld() {
+  // Stort lerret: hold det i vanlig minne (ikke grafikkminne), ellers kan nettleseren
+  // miste innholdet når grafikkminnet blir trangt. Skjermbildene kuttes ut ved behov.
   const c = makeCanvas(WORLD.w, WORLD.h);
-  const g = c.getContext('2d');
+  const g = c.getContext('2d', { willReadFrequently: true });
   const R = rand(2024);
   // gress
   g.fillStyle = '#93c46c';

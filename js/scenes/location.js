@@ -189,6 +189,8 @@ export const locationScene = {
     this.id = params.id;
     this.key = params.key;
     this.place = PLACES[this.id];
+    // hold bare bakgrunnen til dette stedet i minnet
+    for (const k of Object.keys(bgs)) if (k !== this.id) delete bgs[k];
     if (!bgs[this.id]) bgs[this.id] = layer(800, 600, 2, PAINT[this.id]);
     this.t = 0;
     this.st = stats();

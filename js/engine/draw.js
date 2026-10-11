@@ -4,7 +4,9 @@ export const INK = '#2b1e16';
 
 // Q.fast = true mens hvert bilde tegnes: dropper de tyngste akvarelleffektene.
 // Forhåndstegnede lag (layer/sprites) tegnes alltid i full kvalitet.
-export const Q = { fast: false };
+// Q.maxRes: høyeste oppløsning forhåndstegnede lag trenger (settes ut fra skjermstørrelsen),
+// så vi ikke bruker mer grafikkminne enn skjermen faktisk viser.
+export const Q = { fast: false, maxRes: 2 };
 
 export function hq(fn) {
   const prev = Q.fast;
@@ -65,6 +67,7 @@ export function makeCanvas(w, h) {
 
 // Lag et forhåndstegnet lag i høyere oppløsning (res) for skarp skalering.
 export function layer(w, h, res, fn) {
+  res = Math.min(res, Q.maxRes);
   const c = makeCanvas(w * res, h * res);
   const g = c.getContext('2d');
   g.scale(res, res);

@@ -1,6 +1,6 @@
 // Kjøring på kartet sett ovenfra. Piltaster/WASD – eller hold musa der du vil kjøre.
 import { game } from '../game.js';
-import { shape, rect, rrect, circ, stroke, txt, rrPts, INK, hatch, layer, hq } from '../engine/draw.js';
+import { makeCanvas, shape, rect, rrect, circ, stroke, txt, rrPts, INK, hatch, layer, hq } from '../engine/draw.js';
 import { WORLD, SCREEN, OY, LOCATIONS, renderWorld, constrain, nearestRoad } from '../game/world.js';
 import { stats, passes } from '../game/car.js';
 import { makeTopCar } from '../game/carRender.js';
@@ -12,6 +12,21 @@ const VIEW_H = SCREEN.h;
 // minikartets plass i dashbordet
 const MM = { x: 32, y: VIEW_H + 15, w: 84, h: 70 };
 let world = null;
+const tiles = new Map(); // de sist brukte skjermbildene, kuttet ut av world
+
+function tile(cx, cy) {
+  const k = `${cx},${cy}`;
+  let t = tiles.get(k);
+  if (t) {
+    tiles.delete(k);
+  } else {
+    t = makeCanvas(SCREEN.w, SCREEN.h);
+    t.getContext('2d').drawImage(world, cx, cy, SCREEN.w, SCREEN.h, 0, 0, SCREEN.w, SCREEN.h);
+  }
+  tiles.set(k, t);
+  if (tiles.size > 3) tiles.delete(tiles.keys().next().value);
+  return t;
+}
 let mini = null;
 let dashBg = null;
 
@@ -80,6 +95,7 @@ export const mapScene = {
     this.lastType = null;
     this.okSaid = {};
     this.empty = 0;
+    this.warned = 0; // 1 = sagt ifra ved 25 %, 2 = også ved 10 %
     this.shake = 0;
     if (state.fuel > this.st.capacity) state.fuel = this.st.capacity;
     let loc = LOCATIONS[0];
@@ -203,6 +219,7 @@ export const mapScene = {
     const moved = Math.hypot(this.x - ox, this.y - oy);
     if (state.fuel > 0) {
       state.fuel = Math.max(0, state.fuel - moved * st.fuelUse * 0.0105);
+      this.fuelWarning();
       if (state.fuel <= 0) {
         this.say('Å nei! Tom tank! Vi må ringe etter hjelp...');
         audio.sad();
@@ -236,6 +253,31 @@ export const mapScene = {
     this.snapCam();
   },
 
+  // Mulle sier ifra når bensinen begynner å bli lav, og nevner nærmeste stasjon.
+  fuelWarning() {
+    const f = this.st.capacity ? state.fuel / this.st.capacity : 0;
+    if (f <= 0) return;
+    const level = f < 0.1 ? 2 : f < 0.25 ? 1 : 0;
+    if (level <= this.warned) return;
+    this.warned = level;
+    const where = this.nearestStation();
+    this.say(level === 2
+      ? `Bensinen er nesten helt borte! Fort, til ${where}!`
+      : `Bensinmåleren nærmer seg tom. Vi bør kjøre til ${where}.`);
+    this.msgCool = 4;
+  },
+
+  nearestStation() {
+    const names = { bensin: 'bensinstasjonen ved gården', bensin2: 'bensinstasjonen øst for byen' };
+    let best = null;
+    for (const l of LOCATIONS) {
+      if (l.id !== 'bensin') continue;
+      const d = Math.hypot(this.x - l.x, this.y - l.y);
+      if (!best || d < best.d) best = { d, key: l.key };
+    }
+    return names[best.key] || 'bensinstasjonen';
+  },
+
   keydown(e) {
     if (e.key === 'h' || e.key === 'H' || e.key === ' ') {
       if (this.st.horn) audio.honk(this.st.horn);
@@ -251,7 +293,7 @@ export const mapScene = {
     g.rect(0, 0, 800, VIEW_H);
     g.clip();
     g.translate(sx, sy);
-    g.drawImage(world, this.cam.x, this.cam.y, 800, VIEW_H, 0, 0, 800, VIEW_H);
+    g.drawImage(tile(this.cam.x, this.cam.y), 0, 0, 800, VIEW_H);
     const { x: cx, y: cy } = this.screenPos();
     // bilen
     g.save();

@@ -131,7 +131,7 @@ export const junkyardScene = {
     const d = this.drag;
     this.drag = null;
     this.cursor = null;
-    const name = PARTS[d.part.key].name.toLowerCase();
+    const name = PARTS[d.part.key].def;
     if (inside(p, GARAGE)) {
       movePart(d.part, 'garage');
       audio.whoosh();

@@ -364,9 +364,9 @@ add('gir_5', {
 
 // ---------- bensintanker ----------
 add('tank_kanne', {
-  name: 'Bensinkanne', slot: 'tank', weight: 0.5, capacity: 40, style: 0,
+  name: 'Bensinkanne', slot: 'tank', weight: 0.5, capacity: 60, style: 0,
   bbox: [-18, -30, 18, 20],
-  comment: 'En bensinkanne. Det holder til en liten tur.',
+  comment: 'En bensinkanne. Det holder til en tur ut til fyret og hjem igjen.',
   draw(g) {
     rrect(g, -15, -20, 30, 38, 4, { fill: '#c0392b', seed: 501 });
     stroke(g, [[-11, -16], [11, 14]], { lw: 1.6, ink: darken('#c0392b', 0.35) });
@@ -648,6 +648,53 @@ add('pynt_stjerne', {
 });
 
 export const PARTS = Object.fromEntries(PARTS_LIST.map((d) => [d.key, d]));
+
+// Bøyde former til replikker: [bestemt, ubestemt] («bensinkanna», «ei bensinkanne»).
+const FORMS = {
+  motor_totakt: ['den lille totaktsmotoren', 'en liten totaktsmotor'],
+  motor_v4: ['den gamle motoren', 'en gammel firesylindret motor'],
+  motor_traktor: ['traktormotoren', 'en traktormotor'],
+  motor_v8: ['V8-motoren', 'en kraftig V8-motor'],
+  kar_boble: ['boble-karosseriet', 'et boble-karosseri'],
+  kar_pickup: ['pickupen', 'en pickup med lasteplan'],
+  kar_racer: ['racer-karosseriet', 'et racer-karosseri'],
+  kar_badekar: ['badekaret', 'et badekar'],
+  batteri_lite: ['det lille batteriet', 'et lite batteri'],
+  batteri_stort: ['det store batteriet', 'et stort batteri'],
+  gir_3: ['girkassa', 'en tretrinns girkasse'],
+  gir_5: ['femtrinns-girkassa', 'en femtrinns girkasse'],
+  tank_kanne: ['bensinkanna', 'ei bensinkanne'],
+  tank_tonne: ['oljetønna', 'ei oljetønne'],
+  tank_stor: ['den store bensintanken', 'en stor bensintank'],
+  sete_kasse: ['trekassa', 'ei trekasse'],
+  sete_bil: ['bilsetet', 'et bilsete'],
+  sete_sofa: ['blomstersofaen', 'en blomstersofa'],
+  ratt_vanlig: ['rattet', 'et ratt'],
+  ratt_gull: ['det gylne rattet', 'et gyllent ratt'],
+  ratt_styre: ['sykkelstyret', 'et sykkelstyre'],
+  hjul_vanlig: ['hjulet', 'et vanlig hjul'],
+  hjul_sykkel: ['sykkelhjulet', 'et sykkelhjul'],
+  hjul_traktor: ['traktorhjulet', 'et traktorhjul'],
+  hjul_racer: ['racerhjulet', 'et racerhjul'],
+  hjul_tre: ['vognhjulet', 'et vognhjul av tre'],
+  eksos_vanlig: ['eksosrøret', 'et eksosrør'],
+  eksos_sport: ['sportseksosen', 'en sportseksos'],
+  lykt_enkel: ['lykta', 'ei lykt'],
+  lykt_dobbel: ['den doble lykta', 'ei dobbel lykt'],
+  horn_tut: ['tutehornet', 'et tutehorn'],
+  horn_elg: ['elgehornet', 'et elgehorn'],
+  stot_vanlig: ['støtfangeren', 'en støtfanger'],
+  stot_kufanger: ['kufangeren', 'en kufanger'],
+  pynt_flagg: ['flagget', 'et flagg'],
+  pynt_blomst: ['solsikka', 'ei solsikke'],
+  pynt_antenne: ['antenna', 'ei antenne'],
+  pynt_stjerne: ['gullstjerna', 'ei gullstjerne'],
+};
+for (const d of PARTS_LIST) {
+  const f = FORMS[d.key] || [d.name.toLowerCase(), d.name.toLowerCase()];
+  d.def = f[0];
+  d.indef = f[1];
+}
 
 // Chassiset er alltid i garasjen og kan ikke flyttes.
 export const CHASSIS = {
