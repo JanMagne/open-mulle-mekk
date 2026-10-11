@@ -171,12 +171,10 @@ export const yardScene = {
       talk.say('mulle', `Bilen er ikke ferdig ennå. Vi mangler ${st.missing.join(', ')}.`);
       return;
     }
-    if (state.fuel <= 0.5) {
-      state.fuel = st.capacity;
-      save();
-      talk.say('mulle', 'Jeg fyller tanken fra tønna mi først. Sånn!');
-    }
-    if (state.fuel > st.capacity) state.fuel = st.capacity;
+    // Mulle fyller alltid tanken fra tønna si før han kjører ut fra gården.
+    if (state.fuel < st.capacity - 0.5) talk.say('mulle', 'Jeg fyller tanken fra tønna mi først. Sånn, full tank!');
+    state.fuel = st.capacity;
+    save();
     audio.engineStart();
     audio.engineSet(0.6);
     this.leaving = 0.01;

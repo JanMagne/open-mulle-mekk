@@ -307,9 +307,18 @@ export const mapScene = {
     stroke(g, [[fx, VIEW_H + 44], [fx, VIEW_H + 64]], { lw: 3, ink: '#8a1d14', j: 0.1 });
     // bensin
     const f = this.st.capacity ? state.fuel / this.st.capacity : 0;
-    const ang = Math.PI * (1.15 + f * 0.7);
     const gx = 650, gy = VIEW_H + 58;
-    stroke(g, [[gx, gy], [gx + Math.cos(ang) * 26, gy + Math.sin(ang) * 26]], { lw: 3, ink: f < 0.2 ? '#c8322b' : INK, j: 0.1 });
+    // Full tank: nåla presses så hardt mot stoppeklossen ved F at den bøyer seg.
+    const full = f >= 0.98;
+    const ang = Math.PI * (1.15 + Math.min(f, 1) * 0.7) + (full ? 0.08 : 0);
+    const bend = full ? 0.75 + Math.sin(this.t * 6) * 0.05 : 0;
+    const needle = [];
+    for (let i = 0; i <= 8; i++) {
+      const r = (i / 8) * 27;
+      const a = ang + bend * Math.pow(i / 8, 2.2);
+      needle.push([gx + Math.cos(a) * r, gy + Math.sin(a) * r]);
+    }
+    stroke(g, needle, { lw: 3, ink: f < 0.2 ? '#c8322b' : INK, j: 0.1 });
     circ(g, gx, gy, 4, { fill: '#333', lw: 1 });
     if (f < 0.2 && Math.floor(this.t * 2) % 2 === 0) txt(g, 'Lite bensin!', 650, VIEW_H + 14, { size: 15, color: '#ffe27a', outline: INK, olw: 3 });
     // last

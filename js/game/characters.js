@@ -219,7 +219,7 @@ export function drawCow(g, x, y, s = 1, t = 0) {
 export function drawPhone(g, x, y, s = 1, ringing = 0) {
   g.save();
   g.translate(x, y);
-  if (ringing) g.rotate(Math.sin(ringing * 40) * 0.06);
+  if (ringing) g.rotate(Math.sin(ringing * 40) * 0.12);
   g.scale(s, s);
   rect(g, -22, -30, 44, 60, { fill: '#4e8a46', seed: 71 });
   circ(g, 0, -8, 13, { fill: '#d8d8d0', seed: 72 });
@@ -230,8 +230,9 @@ export function drawPhone(g, x, y, s = 1, ringing = 0) {
   stroke(g, [[-10, -30], [-14, -42]], { lw: 3 });
   stroke(g, [[10, -30], [14, -42]], { lw: 3 });
   rect(g, 22, 4, 10, 6, { fill: '#333', lw: 1.5 });
-  // rør
-  rrect(g, -34, -24, 10, 40, 4, { fill: '#2b2b2b', seed: 73 });
+  // rør (hopper i krokene når telefonen ringer)
+  const hop = ringing ? -Math.abs(Math.sin(ringing * 30)) * 6 : 0;
+  rrect(g, -34, -24 + hop, 10, 40, 4, { fill: '#2b2b2b', seed: 73 });
   stroke(g, [[-30, 16], [-34, 30], [-26, 40], [-16, 32]], { lw: 2, j: 0.4 });
   g.restore();
 }

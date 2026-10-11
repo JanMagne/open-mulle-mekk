@@ -1,6 +1,6 @@
 // Garasjen: dra deler fra gulvet og fest dem på chassiset.
 import { game } from '../game.js';
-import { layer, shape, rect, stroke, circ, ell, txt, rand, darken, hatch, grain, tube, INK } from '../engine/draw.js';
+import { layer, shape, rect, stroke, circ, ell, ellPts, txt, rand, darken, hatch, grain, tube, INK } from '../engine/draw.js';
 import { bigArrow, inside, statIcon } from '../game/ui.js';
 import { drawPerson, drawDog, drawPhone, LOOKS } from '../game/characters.js';
 import { drawCar, carHit, drawPart, hitPart, partShadow } from '../game/carRender.js';
@@ -104,11 +104,11 @@ export const garageScene = {
 
   update(dt) {
     this.t += dt;
-    if (state.figgePending && !talk.busy()) {
+    if (state.figgePending) {
       this.ringT += dt;
       if (this.ringT > 2.6) {
         this.ringT = 0;
-        audio.ring();
+        if (!talk.busy()) audio.ring();
       }
     }
   },
@@ -120,9 +120,10 @@ export const garageScene = {
   draw(g) {
     g.drawImage(bg, 0, 0, 800, 600);
     const t = this.t;
-    const ringing = state.figgePending && !talk.busy() && this.ringT < 0.6 ? this.ringT + 0.01 : 0;
+    const ringing = state.figgePending && this.ringT < 0.9 ? this.ringT + 0.01 : 0;
     drawPhone(g, 484, 118, 1, ringing);
     this.drawBoard(g);
+    if (state.figgePending) this.drawRingFx(g, 484, 110);
 
     const hotDoorYard = !this.drag && inside(game.mouse, DOOR_YARD);
     const hotDoorJunk = inside(game.mouse, DOOR_JUNK);
@@ -159,6 +160,37 @@ export const garageScene = {
       partShadow(g, d.part.key, d.x + 6, d.y + 16, 1.04);
       g.restore();
       drawPart(g, d.part.key, d.x, d.y, 1.05);
+    }
+  },
+
+  // Synlig ringing: glød, lydbølger og «RING!» rundt telefonen.
+  drawRingFx(g, x, y) {
+    const k = this.ringT;
+    const pulse = 0.5 + 0.5 * Math.sin(this.t * 5);
+    g.save();
+    const gr = g.createRadialGradient(x, y, 10, x, y, 80);
+    gr.addColorStop(0, 'rgba(255,236,120,0.08)');
+    gr.addColorStop(0.45, `rgba(255,236,120,${0.3 + pulse * 0.25})`);
+    gr.addColorStop(1, 'rgba(255,236,120,0)');
+    g.fillStyle = gr;
+    g.fillRect(x - 80, y - 80, 160, 160);
+    g.restore();
+    if (k > 0.9) return;
+    for (const side of [-1, 1]) {
+      const base = side > 0 ? 0 : Math.PI;
+      for (let i = 0; i < 3; i++) {
+        const r = 38 + i * 13 + ((k * 50) % 13);
+        g.save();
+        g.globalAlpha = Math.max(0, 1 - i * 0.3 - k * 0.6);
+        stroke(g, ellPts(x, y, r, r, base - 0.55, base + 0.55, 6), { lw: 3.2, ink: '#c8322b', j: 0.4, seed: 40 + i });
+        g.restore();
+      }
+      const hop = Math.abs(Math.sin(k * 14)) * 6;
+      g.save();
+      g.translate(x + side * 62, y - 62 - hop);
+      g.rotate(side * 0.25);
+      txt(g, 'RING!', 0, 0, { size: 24, color: '#c8322b', outline: '#fff6d8', olw: 5, bold: true });
+      g.restore();
     }
   },
 
