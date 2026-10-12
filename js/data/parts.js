@@ -213,7 +213,7 @@ const BODIES = {
       shape(g, [[-150, -26], [178, -12], [180, -6], [-152, -18]], { fill: '#fff6e0', lw: 1.6, seed: 122, shade: false });
       // startnummer
       circ(g, -20, -10, 16, { fill: '#fff6e0', lw: 2, seed: 123 });
-      txt(g, '7', -20, -9, { size: 26, bold: true });
+      txt(g, '8', -20, -9, { size: 26, bold: true }); // 8 ser lik ut speilvendt (gården)
       // liten frontrute
       shape(g, [[44, -38], [30, -60], [22, -58], [32, -36]], { fill: GLASS, lw: 1.6, shade: false, blot: false });
       stroke(g, [[60, -36], [150, -24]], { lw: 1.6, ink: darken(c, 0.35), seed: 124 });

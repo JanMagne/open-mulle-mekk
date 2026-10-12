@@ -365,7 +365,7 @@ export const mapScene = {
     if (f < 0.2 && Math.floor(this.t * 2) % 2 === 0) txt(g, 'Lite bensin!', 650, VIEW_H + 14, { size: 15, color: '#ffe27a', outline: INK, olw: 3 });
     // last
     if (state.carried) drawCargoIcon(g, state.carried, 747, VIEW_H + 54);
-    if (this.st.horn) txt(g, 'H = tut', 92, VIEW_H - 14, { size: 15, color: '#fff6d8', outline: INK, olw: 4 });
+    if (this.st.horn) txt(g, 'H = tut', 170, VIEW_H + 11, { size: 14, color: '#fff6d8', align: 'left' });
   },
 
   speakerAnchor() {

@@ -4,6 +4,21 @@ En fan-laget nettleserhyllest til klassikeren «Bygg biler med Mulle Mekk» (199
 All grafikk tegnes med kode (canvas) og all lyd lages med WebAudio, så spillet
 bruker ingen filer fra originalspillet.
 
+![Garasjen: Mulle har bygget en racerbil med V8, flagg og elgehorn](docs/screenshots/02-garasjen.png)
+
+## Skjermbilder
+
+| | |
+|---|---|
+| ![Tittelskjermen](docs/screenshots/01-tittel.png) | ![Gården med huset, garasjen og skraphaugen](docs/screenshots/04-gaarden.png) |
+| **Tittelskjermen** | **Gården** – herfra går du til garasjen, skraphaugen eller ut på veien |
+| ![Skraphaugen](docs/screenshots/03-skraphaugen.png) | ![Kartet over byen](docs/screenshots/05-kartet-byen.png) |
+| **Skraphaugen** – dra deler til garasjen | **Kartet** – kjør fra skjermbilde til skjermbilde |
+| ![Gjørmeveien](docs/screenshots/06-kartet-gjorme.png) | ![Hagefesten i den gule villaen](docs/screenshots/07-hagefesten.png) |
+| **Hindringer** – gjørma krever hjul med godt grep | **Hagefesten** – Fru Flora venter på kaka |
+| ![Fyret](docs/screenshots/08-fyret.png) | |
+| **Fyret** – bak den mørke tunnelen | |
+
 ## Kjøre spillet
 
 ES-moduler krever en enkel webserver (det holder ikke å åpne `index.html` direkte):
